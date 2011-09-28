@@ -1,0 +1,5 @@
+cubicweb-condor (0.1.0-1) unstable; urgency=low
+
+  * Initial release. (Closes: #1972627)
+
+ -- Alain Leufroy <alain.leufroy@logilab.fr>  Wed, 28 Sep 2011 14:57:31 +0200

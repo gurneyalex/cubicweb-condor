@@ -1,0 +1,29 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cubicweb 3.13.1\n"
+"PO-Revision-Date: 2008-03-28 18:14+0100\n"
+"Last-Translator: Logilab Team <contact@logilab.fr>\n"
+"Language-Team: fr <contact@logilab.fr>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: cubicweb-devtools\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "view_condor_jobs"
+msgstr ""
+
+msgid "Condor information"
+msgstr ""
+
+msgid "Condor Status"
+msgstr ""
+
+msgid "Condor Queue"
+msgstr ""
+
+msgid "Condor Remove"
+msgstr ""
+
+msgid "Condor Job ID"
+msgstr ""

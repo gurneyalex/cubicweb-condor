@@ -1,0 +1,25 @@
+msgid ""
+msgstr ""
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "Condor Job ID"
+msgstr "Condor job ID"
+
+msgid "Condor Queue"
+msgstr "Condor queue"
+
+msgid "Condor Remove"
+msgstr "Condor remove"
+
+msgid "Condor Status"
+msgstr "Condor status"
+
+msgid "Condor information"
+msgstr "Condor information"
+
+msgid "view_condor_jobs"
+msgstr "Condor jobs management"
