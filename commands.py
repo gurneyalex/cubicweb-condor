@@ -39,8 +39,7 @@ DEFAULT_JOB_PARAMS = {'Universe': 'vanilla',
                       }
 
 def get_scratch_dir():
-    """
-    return the condor scratch dir.
+    """ return the condor scratch dir.
 
     this is the directory where the job may place temporary data
     files. This directory is unique for every job that is run, and
@@ -55,25 +54,19 @@ def get_scratch_dir():
         return tempfile.gettempdir()
 
 def status(config):
-    """
-    runs condor_status and return exit code and output of the command
-    """
+    """ runs condor_status and return exit code and output of the command """
     status_cmd = osp.join(get_condor_bin_dir(config),
                           CONDOR_COMMAND['status'])
     return _simple_command_run([status_cmd])
 
 def queue(config):
-    """
-    runs condor_queue and return exit code and output of the command
-    """
+    """ runs condor_queue and return exit code and output of the command """
     q_cmd = osp.join(get_condor_bin_dir(config),
                      CONDOR_COMMAND['queue'])
     return _simple_command_run([q_cmd])
 
 def remove(config, jobid):
-    """
-    runs condor_remove and return exit code and output of the command
-    """
+    """ runs condor_remove and return exit code and output of the command """
     rm_cmd = osp.join(get_condor_bin_dir(config),
                       CONDOR_COMMAND['remove'])
     return _simple_command_run([rm_cmd, jobid])
@@ -88,59 +81,52 @@ def build_submit_params(job_params):
     return '\n'.join(lines)
 
 def submit(config, job_params):
-    """
-    submit a (python) job to condor with condor_submit and return exit
+    """ submit a (python) job to condor with condor_submit and return exit
     code and output of the command
 
     config is passed to get the condor root directory
     job_params should be built through build_submit_params method
     """
-    SUBMIT_LOCK.acquire()
-    try:
-        condor_submit_cmd = osp.join(get_condor_bin_dir(config),
-                                     CONDOR_COMMAND['submit'])
-        pipe = subprocess.Popen([condor_submit_cmd],
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        pipe.stdin.write(job_params)
-        pipe.stdin.close()
-        output = pipe.stdout.read()
-        status = pipe.wait()
-        return status, output
-    except OSError, exc:
-        return -1, str(exc)
-    finally:
-        SUBMIT_LOCK.release()
+    with SUBMIT_LOCK:
+        try:
+            condor_submit_cmd = osp.join(get_condor_bin_dir(config),
+                                         CONDOR_COMMAND['submit'])
+            pipe = subprocess.Popen([condor_submit_cmd],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+            pipe.stdin.write(job_params)
+            pipe.stdin.close()
+            output = pipe.stdout.read()
+            status = pipe.wait()
+            return status, output
+        except OSError, exc:
+            return -1, str(exc)
 
 def submit_dag(config, dag_file):
     """ submit dag of (python) jobs to condor and return exit code and
     output of the command
     config is passed to get the condor root directory dag_file is the
     path to the dag file """
-    SUBMIT_LOCK.acquire()
-    try:
-        condor_dag_cmd = osp.join(get_condor_bin_dir(config),
-                                  CONDOR_COMMAND['dag'])
+    with SUBMIT_LOCK:
+        try:
+            condor_dag_cmd = osp.join(get_condor_bin_dir(config),
+                                      CONDOR_COMMAND['dag'])
 
-        pipe = subprocess.Popen(args=(condor_dag_cmd, '-force', dag_file),
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
+            pipe = subprocess.Popen(args=(condor_dag_cmd, '-force', dag_file),
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
 
-        output = pipe.stdout.read()
-        status = pipe.wait()
-        return status, output
-    except OSError, exc:
-        return -1, str(exc)
-    finally:
-        SUBMIT_LOCK.release()
+            output = pipe.stdout.read()
+            status = pipe.wait()
+            return status, output
+        except OSError, exc:
+            return -1, str(exc)
 
 def argument_quote(argument):
-    """
-    return the argument quoted according to the new arguments syntax of condor.
-    See http://www.cs.wisc.edu/condor/manual/v7.4/2_5Submitting_Job.html for details.
-    """
+    """ return the argument quoted according to the new arguments syntax of condor.
+    See http://www.cs.wisc.edu/condor/manual/v7.4/2_5Submitting_Job.html for details. """
     argument = argument.replace('"', '""')
     if ' ' in argument:
         argument = argument.replace("'", "''")
@@ -148,18 +134,14 @@ def argument_quote(argument):
     return argument
 
 def argument_list_quote(arguments):
-    """
-    quote eache argument in the list of argument supplied
-    """
+    """ quote eache argument in the list of argument supplied """
     args = []
     for arg in arguments:
         args.append(argument_quote(arg))
     return '"%s"' % ' '.join(args)
 
 def get_condor_bin_dir(config):
-    """
-    return the directory where the condor executables are installed
-    """
+    """ return the directory where the condor executables are installed """
     condor_root = config['condor-root']
     if condor_root:
         return osp.join(condor_root, 'bin')
@@ -167,9 +149,7 @@ def get_condor_bin_dir(config):
         return ''
 
 def job_ids(config):
-    '''
-    return a list of job ids in the condor queue (as strings)
-    '''
+    """ return a list of job ids in the condor queue (as strings) """
     errcode, output = queue(config)
     interested = False
     ids = []
