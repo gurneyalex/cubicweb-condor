@@ -2,4 +2,10 @@ cubicweb-condor (0.1.0-1) unstable; urgency=low
 
   * Initial release. (Closes: #1972627)
 
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Tue, 27 Mar 2011 16:13:00 +0200
+
+cubicweb-condor (0.1.0-1) unstable; urgency=low
+
+  * Initial release. (Closes: #1972627)
+
  -- Alain Leufroy <alain.leufroy@logilab.fr>  Wed, 28 Sep 2011 14:57:31 +0200
