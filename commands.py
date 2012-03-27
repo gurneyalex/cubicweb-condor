@@ -31,6 +31,13 @@ if sys.platform == 'win32':
 
 MISSING_COMMANDS_SIGNALED = set()
 
+DEFAULT_JOB_PARAMS = {'Universe': 'vanilla',
+                      'Transfer_executable': 'False',
+                      'Run_as_owner': 'True',
+                      'Executable': SYS_EXECUTABLE,
+                      'getenv': 'True',
+                      }
+
 def get_scratch_dir():
     """
     return the condor scratch dir.
@@ -71,72 +78,52 @@ def remove(config, jobid):
                       CONDOR_COMMAND['remove'])
     return _simple_command_run([rm_cmd, jobid])
 
-def write_submit_file(command_args, job_params, operation):
-    '''
-    Write the submit description file for a job and returns the path to it
-    '''
-    quoted_args = argument_list_quote(command_args)
-    job_params['arguments'] = quoted_args
-    job_params['executable'] = SYS_EXECUTABLE
-    job = CONDOR_PYTHON_JOB_TEMPLATE % job_params
+def build_submit_params(job_params):
+    """ build submit params for a condor job submission
+    with keys and values from a dictionary  """
+    submit_params = DEFAULT_JOB_PARAMS.copy()
+    submit_params.update(job_params)
+    lines = ['%s=%s' % (k, v) for k, v in submit_params.iteritems()]
+    lines.append('Queue')
+    return '\n'.join(lines)
 
-    # write submit file on the fileserver
-    filepath = osp.join(job_params['workingdirectory'], 
-                        '%s.%s.submit' % (job_params['name'], operation))
-    if osp.isfile(filepath):
-        os.remove(filepath)
-    with open(filepath, 'w') as submit_file:
-        submit_file.write(job)
-    
-    return filepath
-
-def submit(config, command_args, job_params):
+def submit(config, job_params):
     """
     submit a (python) job to condor with condor_submit and return exit
     code and output of the command
 
     config is passed to get the condor root directory
-    command_args is a list of arguments passed to Python
-    job_params is a dictionnary containing the following keys:
-    * logfile
-    * stderr
-    * workingdirectory
+    job_params should be built through build_submit_params method
     """
     SUBMIT_LOCK.acquire()
     try:
-        submit_cmd = osp.join(get_condor_bin_dir(config),
-                                 CONDOR_COMMAND['submit'])
-        quoted_args = argument_list_quote(command_args)
-        job_params['arguments'] = quoted_args
-        job_params['executable'] = SYS_EXECUTABLE
-        job = CONDOR_PYTHON_JOB_TEMPLATE % job_params
-
-        pipe = subprocess.Popen([submit_cmd], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        pipe.stdin.write(job)
+        condor_submit_cmd = osp.join(get_condor_bin_dir(config),
+                                     CONDOR_COMMAND['submit'])
+        pipe = subprocess.Popen([condor_submit_cmd],
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT)
+        pipe.stdin.write(job_params)
         pipe.stdin.close()
         output = pipe.stdout.read()
         status = pipe.wait()
         return status, output
     except OSError, exc:
-        return - 1, str(exc)
+        return -1, str(exc)
     finally:
         SUBMIT_LOCK.release()
 
 def submit_dag(config, dag_file):
-    """
-    submit dag of (python) jobs to condor and return exit code and
+    """ submit dag of (python) jobs to condor and return exit code and
     output of the command
-    
     config is passed to get the condor root directory dag_file is the
-    path to the dag file
-    """
+    path to the dag file """
     SUBMIT_LOCK.acquire()
     try:
-        submit_cmd = osp.join(get_condor_bin_dir(config),
-                                 CONDOR_COMMAND['dag'])
+        condor_dag_cmd = osp.join(get_condor_bin_dir(config),
+                                  CONDOR_COMMAND['dag'])
 
-        pipe = subprocess.Popen(args=(submit_cmd, '-force', dag_file),
+        pipe = subprocess.Popen(args=(condor_dag_cmd, '-force', dag_file),
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT)
@@ -145,23 +132,9 @@ def submit_dag(config, dag_file):
         status = pipe.wait()
         return status, output
     except OSError, exc:
-        return - 1, str(exc)
+        return -1, str(exc)
     finally:
         SUBMIT_LOCK.release()
-
-
-CONDOR_PYTHON_JOB_TEMPLATE = \
-'''Universe=vanilla
-Executable=%(executable)s
-Arguments=%(arguments)s
-Transfer_executable = False
-Run_as_owner=True
-InitialDir=%(workingdirectory)s
-Log=%(logfile)s
-Error=%(stderr)s
-getenv=True
-Queue
-'''
 
 def argument_quote(argument):
     """
@@ -192,7 +165,6 @@ def get_condor_bin_dir(config):
         return osp.join(condor_root, 'bin')
     else:
         return ''
-
 
 def job_ids(config):
     '''
@@ -225,7 +197,6 @@ def cleanup_stale_run_executions(repo):
     the Condor queue, but are not reported as such by Condor.
 
     The cleanup is done in two passes to avoid race conditions:
-    
     * RE as tagged as suspicious if the condor queue is empty and the
       job should be there
     * a RE already tagged as suspicious, if still in the same
