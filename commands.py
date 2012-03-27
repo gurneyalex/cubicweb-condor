@@ -188,45 +188,6 @@ def job_ids(config):
     logger.debug('found the following jobs in Condor queue: %s', ids)
     return ids
 
-# the suspicious jobs list
-__CANDIDATES = set()
-
-def cleanup_stale_run_executions(repo):
-    """
-    clear RunExecutions which are supposed to be running or waiting in
-    the Condor queue, but are not reported as such by Condor.
-
-    The cleanup is done in two passes to avoid race conditions:
-    * RE as tagged as suspicious if the condor queue is empty and the
-      job should be there
-    * a RE already tagged as suspicious, if still in the same
-      situation the next time is transitioned to the failed state
-    """
-    global __CANDIDATES
-    SUBMIT_LOCK.acquire()
-    session = repo.internal_session()
-    try:
-        jobs = job_ids(repo.config)
-        if jobs:
-            logger.debug('Jobs waiting in queue, clearing suspicious job list')
-            __CANDIDATES.clear()
-            return
-        if __CANDIDATES:
-            logger.info('Suspicious RunExecutions: %s', __CANDIDATES)
-        # if there are no job in the queue
-        rql = "Any X WHERE X is RunExecution, X in_state S, S name in ('re_condor_queued', 're_condor_running')"
-        for execution in session.execute(rql).entities():
-            if execution.eid in __CANDIDATES:
-                __CANDIDATES.remove(execution.eid)
-                logger.error('cleanup_stale_run_executions: forcing transition re_fail on RunExecution %d', execution.eid)
-                execution.fire_transition('re_fail', 'something failed, probably in Condor')
-            else:
-                logger.info('cleanup_stale_run_executions: found suspicious RunExecution %d', execution.eid)
-                __CANDIDATES.add(execution.eid)
-        session.commit()
-    finally:
-        SUBMIT_LOCK.release()
-        session.close()
 
 def _simple_command_run(cmd):
     if not osp.isfile(cmd[0]):
