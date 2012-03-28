@@ -1,6 +1,7 @@
 """
 condor job management utilities
 """
+from __future__ import with_statement
 
 import sys
 import logging
@@ -25,6 +26,7 @@ CONDOR_COMMAND = {'submit': 'condor_submit',
                   'status': 'condor_status',
                   }
 
+# XXX dubious
 if sys.platform == 'win32':
     for command in CONDOR_COMMAND:
         CONDOR_COMMAND[command] += '.exe'
