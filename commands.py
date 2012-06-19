@@ -173,11 +173,12 @@ def job_ids(config):
 
 def _simple_command_run(cmd):
     if not osp.isfile(cmd[0]):
-        if cmd[0] not in MISSING_COMMANDS_SIGNALED:
-            MISSING_COMMANDS_SIGNALED.add(cmd[0])
-            logger.error('Cannot run %s. Check condor installation and '
-                         'instance configuration' % cmd[0])
-        return -1, u'No such file or directory %s' % cmd[0]
+        if sys.platform == 'win32':
+            if cmd[0] not in MISSING_COMMANDS_SIGNALED:
+                MISSING_COMMANDS_SIGNALED.add(cmd[0])
+                logger.error('Cannot run %s. Check condor installation and '
+                             'instance configuration' % cmd[0])
+            return -1, u'No such file or directory %s' % cmd[0]
     try:
         pipe = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
