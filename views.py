@@ -36,7 +36,7 @@ from cubes.condor.commands import status, queue, remove
 
 class CondorJobView(FormViewMixIn, StartupView):
     __regid__ = 'condor_jobs'
-    __select__ = StartupView.__select__ & match_user_groups('managers')
+    __select__ = StartupView.__select__
     title = _('view_condor_jobs')
     http_cache_manager = NoHTTPCacheManager
 
@@ -48,7 +48,8 @@ class CondorJobView(FormViewMixIn, StartupView):
         with(h1(w)):
             w(_('Condor information'))
         self.condor_queue_section()
-        self.condor_remove_section()
+        if 'managers' in self._cw.user.groups:
+            self.condor_remove_section()
         self.condor_status_section()
 
     def condor_status_section(self):
@@ -92,7 +93,7 @@ class CondorJobView(FormViewMixIn, StartupView):
 class CondorRemoveController(Controller):
     __regid__ = 'do_condor_remove'
     __select__ = Controller.__select__ & match_user_groups('managers')
-    
+
     def publish(self, rset=None):
         job_id = self._cw.form['condor_job_id']
         errcode, output = remove(self._cw.vreg.config, job_id)
