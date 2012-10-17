@@ -1,3 +1,9 @@
+cubicweb-condor (0.3.0-1) unstable; urgency=low
+
+  * upstream release
+
+ -- Aurélien Campéas <aurelien.campeas@logilab.fr>  Wed, 17 Oct 2012 14:04:00 +0200
+
 cubicweb-condor (0.2.0-1) unstable; urgency=low
 
   * upstream release
