@@ -55,6 +55,22 @@ def get_scratch_dir():
     except KeyError:
         return tempfile.gettempdir()
 
+def pool_debug(config):
+    """
+    determine which server is used for credd authentication
+    as well as the DOMAIN_UID
+    """
+
+    args = ['-f', r'%s\t', 'Name',
+            '-f', r'%s\t', 'uiddomain',
+            '-f', r'%s\n', r'ifThenElse(isUndefined(LocalCredd),"UNDEF",LocalCredd)']
+
+    status_cmd = osp.join(get_condor_bin_dir(config),
+                          CONDOR_COMMAND['status'])
+
+    return _simple_command_run([status_cmd] + args)
+
+
 def status(config):
     """ runs condor_status and return exit code and output of the command """
     status_cmd = osp.join(get_condor_bin_dir(config),

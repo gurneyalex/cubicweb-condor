@@ -1,16 +1,16 @@
 # copyright 2011 LOGILAB S.A. (Paris, FRANCE), all rights reserved.
 # contact http://www.logilab.fr -- mailto:contact@logilab.fr
-#
+# 
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the Free
 # Software Foundation, either version 2.1 of the License, or (at your option)
 # any later version.
-#
+# 
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
 # details.
-#
+# 
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program. If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ Condor job management view
 from __future__ import with_statement
 
 import subprocess
-from cwtags.tag import a, h1, h2, p, table, tr, td, li, ul, pre
+from cwtags.tag import a, h1, h2, p, table, tr, td, li, ul, pre, div
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import match_user_groups
@@ -32,11 +32,11 @@ from cubicweb.web.formwidgets import SubmitButton
 from cubicweb.web.controller import Controller
 from cubicweb.web.httpcache import NoHTTPCacheManager
 
-from cubes.condor.commands import status, queue, remove
+from cubes.condor.commands import status, queue, remove, pool_debug
 
 class CondorJobView(FormViewMixIn, StartupView):
     __regid__ = 'condor_jobs'
-    __select__ = StartupView.__select__ & match_user_groups('managers')
+    __select__ = StartupView.__select__
     title = _('view_condor_jobs')
     http_cache_manager = NoHTTPCacheManager
 
@@ -48,8 +48,31 @@ class CondorJobView(FormViewMixIn, StartupView):
         with(h1(w)):
             w(_('Condor information'))
         self.condor_queue_section()
-        self.condor_remove_section()
+        if 'managers' in self._cw.user.groups:
+            self.condor_remove_section()
         self.condor_status_section()
+        if 'managers' in self._cw.user.groups:
+            self.condor_debug_section()
+
+    def condor_debug_section(self):
+        w = self.w
+        _ = self._cw._
+        with(h2(w)):
+            w(_('Condor Pool Debug'))
+        alert_style = """
+            padding: 8px 35px 8px 14px;
+            margin-bottom: 18px;
+            color: #c09853;
+            background-color: #fcf8e3;
+            border: 1px solid #fbeed5;
+        """
+        with(div(w, style=alert_style)):
+            w('Node Name | Domain UID | Local Credd server <br/>')
+            w('<strong>Note:</strong> Domain UID and Local Credd server should be the same across all nodes'
+            ' in the same pool')
+        errcode, output = pool_debug(self._cw.vreg.config)
+        with(pre(w)):
+            w(xml_escape(output))
 
     def condor_status_section(self):
         w = self.w
@@ -92,7 +115,7 @@ class CondorJobView(FormViewMixIn, StartupView):
 class CondorRemoveController(Controller):
     __regid__ = 'do_condor_remove'
     __select__ = Controller.__select__ & match_user_groups('managers')
-    
+
     def publish(self, rset=None):
         job_id = self._cw.form['condor_job_id']
         errcode, output = remove(self._cw.vreg.config, job_id)
