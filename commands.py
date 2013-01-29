@@ -84,11 +84,11 @@ def queue(config):
     return _simple_command_run([q_cmd, '-global'],
                                ignore_output_errors=['All queues are empty',])
 
-def remove(config, jobid):
+def remove(config, schedd, jobid):
     """ runs condor_remove and return exit code and output of the command """
     rm_cmd = osp.join(get_condor_bin_dir(config),
                       CONDOR_COMMAND['remove'])
-    return _simple_command_run([rm_cmd, jobid])
+    return _simple_command_run([rm_cmd, jobid, '-name', schedd])
 
 def build_submit_params(job_params):
     """ build submit params for a condor job submission
