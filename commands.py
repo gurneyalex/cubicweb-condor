@@ -81,7 +81,8 @@ def queue(config):
     """ runs condor_queue and return exit code and output of the command """
     q_cmd = osp.join(get_condor_bin_dir(config),
                      CONDOR_COMMAND['queue'])
-    return _simple_command_run([q_cmd])
+    return _simple_command_run([q_cmd, '-global'],
+                               ignore_output_errors=['All queues are empty',])
 
 def remove(config, jobid):
     """ runs condor_remove and return exit code and output of the command """
@@ -167,27 +168,54 @@ def get_condor_bin_dir(config):
         return ''
 
 def job_ids(config):
-    """ return a list of job ids in the condor queue (as strings) """
+    """ return a list of job ids in the condor queue (as strings)
+    The parsing is done for an output that looks like:
+
+pagode@crater1:~/confs/pagode/cubes/condor$ condor_q -global
+
+
+-- Schedd: foo.logilab.fr : <192.168.1.42:49452>
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD
+   4.0   schabot        12/11 13:30   0+00:00:01 H  0   0.0  align.py name
+   7.0   schabot        12/11 13:41   0+00:00:00 H  0   0.0  align.py
+  12.0   schabot        12/11 13:50   0+00:00:01 H  0   0.0  sh_loop.py
+
+5 jobs; 0 idle, 0 running, 5 held
+
+
+-- Schedd: condor.logilab.fr : <192.168.1.142:54657>
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD
+   6.0   logilab         6/20 10:28   0+00:00:00 I  0   0.0  simple 4 10
+   7.0   logilab         6/20 10:40   0+00:00:00 I  0   0.0  simple 4 10
+
+    """
     errcode, output = queue(config)
-    interested = False
+    parse_line = False
+    current_sched = None
     ids = []
     if errcode != 0:
+        logger.debug('queue command issued return code: %s', errcode)
         return ids
+
     for line in output.splitlines():
         line = line.strip()
-        if interested:
-            if not line:
-                break
-            ids.append(line.split()[0])
-        else:
-            if line.startswith('ID'):
-                interested = True
+        parse_line = parse_line and bool(line)
+        if parse_line:
+            assert current_sched
+            ids.append( (current_sched, line.split()[0]) )
             continue
+
+        if line.startswith('--'):
+            current_sched = line.split()[2].strip()
+
+        if line.startswith('ID'):
+            parse_line = True
+
     logger.debug('found the following jobs in Condor queue: %s', ids)
     return ids
 
 
-def _simple_command_run(cmd):
+def _simple_command_run(cmd, ignore_output_errors=[]):
     if not osp.isfile(cmd[0]):
         if sys.platform == 'win32':
             if cmd[0] not in MISSING_COMMANDS_SIGNALED:
@@ -195,6 +223,7 @@ def _simple_command_run(cmd):
                 logger.error('Cannot run %s. Check condor installation and '
                              'instance configuration' % cmd[0])
             return -1, u'No such file or directory %s' % cmd[0]
+
     try:
         pipe = subprocess.Popen(cmd,
                                 stdout=subprocess.PIPE,
@@ -203,11 +232,12 @@ def _simple_command_run(cmd):
         errcode = pipe.wait()
         logger.debug('%s exited with status %d', cmd, errcode)
         if errcode != 0:
-            logger.error('error while running %s: %s', cmd, output)
+            # oddly, condor_q -global will exit with 127 if all queues are empty
+            if not any(ignore in output
+                       for ignore in ignore_output_errors):
+                logger.error('error while running %s: %s', cmd, output)
 
         return errcode, output.decode('latin-1', 'replace')
     except OSError, exc:
         logger.exception('error while running %s', cmd)
         return -1, str(exc).decode('latin-1', 'replace')
-
-
