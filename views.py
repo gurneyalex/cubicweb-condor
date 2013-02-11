@@ -103,6 +103,8 @@ class CondorJobView(FormViewMixIn, StartupView):
                                              action=self._cw.build_url('do_condor_remove'),
                                              __errorurl=self._cw.build_url(vid='condor_jobs'),
                                              form_buttons=[SubmitButton()])
+        form.append_field(ff.StringField(name='condor_condor_schedd_name',
+                                         label=_('Condor Schedd Name')))
         form.append_field(ff.IntField(min=0, name='condor_job_id',
                                        label=_('Condor Job ID')))
         renderer = form.default_renderer()
@@ -118,7 +120,8 @@ class CondorRemoveController(Controller):
 
     def publish(self, rset=None):
         job_id = self._cw.form['condor_job_id']
-        errcode, output = remove(self._cw.vreg.config, job_id)
+        schedd_name = self._cw.form['condor_schedd_name']
+        errcode, output = remove(self._cw.vreg.config, schedd_name, job_id)
         raise Redirect(self._cw.build_url(vid='condor_jobs',
                                           __message=xml_escape(output.strip()))
                        )
