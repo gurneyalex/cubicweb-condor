@@ -4,7 +4,7 @@
 modname = 'condor'
 distname = 'cubicweb-condor'
 
-numversion = (0, 3, 0)
+numversion = (0, 4, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
@@ -15,7 +15,7 @@ web = 'http://www.cubicweb.org/project/%s' % distname
 
 __depends__ =  {'cubicweb': '>= 3.13.1'}
 __recommends__ = {}
- 
+
 
 from os import listdir as _listdir
 from os.path import join, isdir, exists
@@ -39,4 +39,3 @@ for dname in ('entities', 'views', 'sobjects', 'hooks', 'schema', 'data', 'wdoc'
         data_files.append([join(THIS_CUBE_DIR, dname), listdir(dname)])
 # Note: here, you'll need to add subdirectories if you want
 # them to be included in the debian package
-
