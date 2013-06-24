@@ -20,8 +20,7 @@ Condor job management view
 """
 from __future__ import with_statement
 
-import subprocess
-from cwtags.tag import a, h1, h2, p, table, tr, td, li, ul, pre, div
+from cwtags.tag import h1, h2, pre, div
 from logilab.mtconverter import xml_escape
 
 from cubicweb.selectors import match_user_groups
@@ -34,11 +33,14 @@ from cubicweb.web.httpcache import NoHTTPCacheManager
 
 from cubes.condor.commands import status, queue, remove, pool_debug
 
+_ = unicode
+
 class CondorJobView(FormViewMixIn, StartupView):
     __regid__ = 'condor_jobs'
     __select__ = StartupView.__select__
     title = _('view_condor_jobs')
     http_cache_manager = NoHTTPCacheManager
+    condor_manager_groups = frozenset(('managers',))
 
     def call(self, **kwargs):
         w = self.w
@@ -48,10 +50,10 @@ class CondorJobView(FormViewMixIn, StartupView):
         with(h1(w)):
             w(_('Condor information'))
         self.condor_queue_section()
-        if 'managers' in self._cw.user.groups:
+        if self.condor_manager_groups.intersection(self._cw.user.groups):
             self.condor_remove_section()
         self.condor_status_section()
-        if 'managers' in self._cw.user.groups:
+        if self.condor_manager_groups.intersection(self._cw.user.groups):
             self.condor_debug_section()
 
     def condor_debug_section(self):
@@ -116,7 +118,7 @@ class CondorJobView(FormViewMixIn, StartupView):
 
 class CondorRemoveController(Controller):
     __regid__ = 'do_condor_remove'
-    __select__ = Controller.__select__ & match_user_groups('managers')
+    __select__ = Controller.__select__ & match_user_groups(CondorJobView.condor_manager_groups)
 
     def publish(self, rset=None):
         job_id = self._cw.form['condor_job_id']
