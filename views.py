@@ -103,7 +103,7 @@ class CondorJobView(FormViewMixIn, StartupView):
                                              action=self._cw.build_url('do_condor_remove'),
                                              __errorurl=self._cw.build_url(vid='condor_jobs'),
                                              form_buttons=[SubmitButton()])
-        form.append_field(ff.StringField(name='condor_condor_schedd_name',
+        form.append_field(ff.StringField(name='condor_schedd_name',
                                          label=_('Condor Schedd Name')))
         form.append_field(ff.IntField(min=0, name='condor_job_id',
                                        label=_('Condor Job ID')))
