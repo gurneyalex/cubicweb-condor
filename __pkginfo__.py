@@ -4,7 +4,7 @@
 modname = 'condor'
 distname = 'cubicweb-condor'
 
-numversion = (0, 4, 0)
+numversion = (1, 0, 0)
 version = '.'.join(str(num) for num in numversion)
 
 license = 'LGPL'
@@ -13,7 +13,7 @@ author_email = 'contact@logilab.fr'
 description = 'adds facilities to interact with the Condor batch job queue manager'
 web = 'http://www.cubicweb.org/project/%s' % distname
 
-__depends__ =  {'cubicweb': '>= 3.13.1'}
+__depends__ =  {'cubicweb': '>= 3.14.1'}
 __recommends__ = {}
 
 
