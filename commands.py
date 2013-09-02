@@ -37,7 +37,6 @@ DEFAULT_JOB_PARAMS = {'Universe': 'vanilla',
                       'Transfer_executable': 'False',
                       'Run_as_owner': 'True',
                       'Executable': SYS_EXECUTABLE,
-                      'getenv': 'True',
                       }
 
 def get_scratch_dir():
@@ -90,10 +89,37 @@ def remove(config, schedd, jobid):
                       CONDOR_COMMAND['remove'])
     return _simple_command_run([rm_cmd, jobid, '-name', schedd])
 
-def build_submit_params(job_params):
-    """ build submit params for a condor job submission
-    with keys and values from a dictionary  """
+
+def _build_environment(envdict):
+    """ Weird-ish condor friendly env line builder
+    See http://research.cs.wisc.edu/htcondor/manual/v8.0/condor_submit.html
+    """
+    lines = []
+    for k, v in envdict.iteritems():
+        if " " in v: # NOTE: per the spec, one might want to handle all 'whitespace' chars.
+            v = v.replace("'", "''")
+            v = "'%s'" % v
+        v = v.replace('"', '""')
+        lines.append('%s=%s'  % (k, v))
+    return '"%s"' % ' '.join(lines)
+
+def build_submit_params(job_params, use_submitter_env=True, more_environment=None):
+    """build submit params for a condor job submission
+    with keys and values from a dictionary
+
+    By default, Condor will use the environment variables of the target machine and
+    overwrite them by the ones present on the calling machine, except if
+    you change use_submitter_env to False.
+
+    You also can use the dictionnary more_environment to add (or
+    overwrite) specific environment variables
+
+    """
     submit_params = DEFAULT_JOB_PARAMS.copy()
+    if use_submitter_env:
+        submit_params['getenv'] = 'True'
+    if more_environment:
+        submit_params['environment'] = _build_environment(more_environment)
     submit_params.update(job_params)
     lines = ['%s=%s' % (k, v) for k, v in submit_params.iteritems()]
     lines.append('Queue')

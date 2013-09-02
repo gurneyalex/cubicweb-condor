@@ -41,3 +41,8 @@ class CondorTC(TestCase):
     def test_job_ids_error(self):
         condor.queue = fake_queue(-1, 'No such file or directory')
         self.assertEqual(condor.job_ids(None), [])
+
+    def test_buildenv(self):
+        self.assertEqual('"babar=\'ba ""ba"" r\' TARGET=42"',
+                         condor._build_environment({'TARGET': '42',
+                                                    'babar': 'ba "ba" r'}))
