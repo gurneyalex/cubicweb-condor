@@ -1,5 +1,8 @@
 from logilab.common.testlib import TestCase, unittest_main
 
+# set up sys.path so we can find cubes.condor
+import cubicweb.devtools
+
 from cubes.condor import commands as condor
 
 class fake_queue:
