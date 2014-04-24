@@ -49,3 +49,7 @@ class CondorTC(TestCase):
         self.assertEqual('"babar=\'ba ""ba"" r\' TARGET=42"',
                          condor._build_environment({'TARGET': '42',
                                                     'babar': 'ba "ba" r'}))
+
+if __name__ == '__main__':
+    from logilab.common.testlib import unittest_main
+    unittest_main()
