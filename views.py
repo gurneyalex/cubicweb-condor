@@ -18,12 +18,10 @@
 Condor job management view
 
 """
-from __future__ import with_statement
-
 from cwtags.tag import h1, h2, pre, div
 from logilab.mtconverter import xml_escape
 
-from cubicweb.selectors import match_user_groups
+from cubicweb.predicates import match_user_groups
 from cubicweb.view import StartupView
 from cubicweb.web import formfields as ff, Redirect
 from cubicweb.web.form import FormViewMixIn
