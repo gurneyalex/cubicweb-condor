@@ -38,7 +38,7 @@ class CondorJobView(FormViewMixIn, StartupView):
     __select__ = StartupView.__select__
     title = _('view_condor_jobs')
     http_cache_manager = NoHTTPCacheManager
-    condor_manager_groups = frozenset(('managers',))
+    condor_manager_groups = set(('managers',))
 
     def call(self, **kwargs):
         w = self.w
@@ -113,6 +113,7 @@ class CondorJobView(FormViewMixIn, StartupView):
             return u''
         renderer.error_message = error_message
         form.render(w=w, renderer=renderer)
+
 
 class CondorRemoveController(Controller):
     __regid__ = 'do_condor_remove'
