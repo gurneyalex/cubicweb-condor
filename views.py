@@ -67,9 +67,9 @@ class CondorJobView(FormViewMixIn, StartupView):
             border: 1px solid #fbeed5;
         """
         with(div(w, style=alert_style)):
-            w('Node Name | Domain UID | Local Credd server <br/>')
-            w('<strong>Note:</strong> Domain UID and Local Credd server should be the same across all nodes'
-            ' in the same pool')
+            w(u'Node Name | Domain UID | Local Credd server <br/>')
+            w(u'<strong>Note:</strong> Domain UID and Local Credd server should be the same across all nodes'
+              ' in the same pool')
         errcode, output = pool_debug(self._cw.vreg.config)
         with(pre(w)):
             w(xml_escape(output))
